@@ -3,9 +3,9 @@ import { showAuthModal } from '../components/authModal.js';
 import { showToast } from '../components/toast.js';
 
 export function renderPricing(container) {
-    const user = auth.user;
+  const user = auth.user;
 
-    container.innerHTML = `
+  container.innerHTML = `
   <div class="pricing-page">
     <div class="container">
       <div class="pricing__header slide-up">
@@ -132,42 +132,42 @@ export function renderPricing(container) {
   </div>
   `;
 
-    // Plan purchase
-    container.querySelectorAll('[data-plan]').forEach(btn => {
-        const plan = btn.dataset.plan;
-        if (user?.plan === plan) {
-            btn.disabled = true;
-            return;
-        }
+  // Plan purchase
+  container.querySelectorAll('[data-plan]').forEach(btn => {
+    const plan = btn.dataset.plan;
+    if (user?.plan === plan) {
+      btn.disabled = true;
+      return;
+    }
 
-        btn.addEventListener('click', async () => {
-            if (!auth.isLoggedIn) {
-                showAuthModal('register');
-                return;
-            }
+    btn.addEventListener('click', async () => {
+      if (!auth.isLoggedIn) {
+        showAuthModal('register');
+        return;
+      }
 
-            try {
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner"></span>';
-                const result = await api.checkout(plan);
-                auth.setUser(result.user);
-                showToast(`Upgraded to ${plan}! 🎉`, 'success');
-                renderPricing(container); // re-render to update button states
-            } catch (err) {
-                showToast(err.message || 'Checkout failed', 'error');
-                btn.disabled = false;
-                btn.textContent = `Get ${plan.charAt(0).toUpperCase() + plan.slice(1)}`;
-            }
-        });
+      try {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>';
+        const result = await api.checkout(plan);
+        auth.setUser(result.user);
+        showToast(`Upgraded to ${plan}!`, 'success');
+        renderPricing(container); // re-render to update button states
+      } catch (err) {
+        showToast(err.message || 'Checkout failed', 'error');
+        btn.disabled = false;
+        btn.textContent = `Get ${plan.charAt(0).toUpperCase() + plan.slice(1)}`;
+      }
     });
+  });
 
-    // FAQ accordion
-    container.querySelectorAll('.faq__question').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const item = btn.closest('.faq__item');
-            const wasOpen = item.classList.contains('faq__item--open');
-            container.querySelectorAll('.faq__item').forEach(i => i.classList.remove('faq__item--open'));
-            if (!wasOpen) item.classList.add('faq__item--open');
-        });
+  // FAQ accordion
+  container.querySelectorAll('.faq__question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq__item');
+      const wasOpen = item.classList.contains('faq__item--open');
+      container.querySelectorAll('.faq__item').forEach(i => i.classList.remove('faq__item--open'));
+      if (!wasOpen) item.classList.add('faq__item--open');
     });
+  });
 }

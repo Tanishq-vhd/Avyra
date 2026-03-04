@@ -7,8 +7,8 @@ export function renderPayment(container) {
   container.innerHTML = `
   <div class="fade-in" style="max-width:460px;margin:0 auto;padding:var(--space-10) var(--space-6) var(--space-16)">
     <div style="text-align:center;margin-bottom:var(--space-6)">
-      <div style="width:48px;height:48px;border-radius:14px;background:var(--color-accent);display:inline-flex;align-items:center;justify-content:center;margin-bottom:var(--space-3)">
-        <span style="font-size:20px;color:white;font-weight:700">A</span>
+      <div style="width:48px;height:48px;margin:0 auto var(--space-3)">
+        <img src="/logo.png" alt="Avyra" style="width:100%;height:100%;object-fit:contain" />
       </div>
       <h1 style="font-size:var(--text-xl);font-weight:700;margin-bottom:var(--space-1)">
         Activate your account
@@ -67,7 +67,7 @@ export function renderPayment(container) {
       </button>
 
       <div style="text-align:center;margin-top:var(--space-2);font-size:var(--text-xs);color:var(--color-text-tertiary)">
-        🔒 Secure payment · One-time · No subscription
+        Secure payment · One-time · No subscription
       </div>
     </div>
   </div>
@@ -107,7 +107,7 @@ export function renderPayment(container) {
       await new Promise(r => setTimeout(r, 1500));
       const result = await api.activatePayment();
       auth.setUser(result.user);
-      showToast('Payment successful! Welcome to Avyra ✨', 'success');
+      showToast('Payment successful! Welcome to Avyra.', 'success');
       window.location.hash = '#/payment-success';
     } catch (err) {
       showToast(err.message || 'Payment failed', 'error');

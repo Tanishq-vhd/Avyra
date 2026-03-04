@@ -14,6 +14,18 @@ export const User = {
         return this.findById(id);
     },
 
+    findOrCreateGoogle({ email, name, googleId }) {
+        let user = this.findByEmail(email);
+        if (user) return user;
+        // Create new user with empty password (Google-only)
+        const id = uuidv4();
+        db().prepare(`
+      INSERT INTO users (id, email, password_hash, name)
+      VALUES (?, ?, ?, ?)
+    `).run(id, email, '__google__' + googleId, name || '');
+        return this.findById(id);
+    },
+
     findById(id) {
         return db().prepare(`
       SELECT id, email, name, plan, has_paid, downloads_used, download_limit, created_at, updated_at

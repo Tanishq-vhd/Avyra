@@ -7,6 +7,47 @@ import { validate, schemas } from '../middleware/validate.js';
 
 const router = Router();
 
+// Decode Google JWT payload (already verified client-side by GIS)
+function decodeGoogleJwt(token) {
+    try {
+        const payload = token.split('.')[1];
+        const decoded = Buffer.from(payload, 'base64url').toString('utf8');
+        return JSON.parse(decoded);
+    } catch {
+        return null;
+    }
+}
+
+// Google Sign-In
+router.post('/google', async (req, res) => {
+    try {
+        const { credential } = req.body;
+        if (!credential) {
+            return res.status(400).json({ error: 'Missing Google credential' });
+        }
+
+        const payload = decodeGoogleJwt(credential);
+        if (!payload || !payload.email) {
+            return res.status(400).json({ error: 'Invalid Google token' });
+        }
+
+        const user = User.findOrCreateGoogle({
+            email: payload.email,
+            name: payload.name || payload.given_name || '',
+            googleId: payload.sub
+        });
+
+        const token = generateToken(user.id);
+        res.json({
+            user: { id: user.id, email: user.email, name: user.name, plan: user.plan, has_paid: user.has_paid, downloads_used: user.downloads_used },
+            token
+        });
+    } catch (err) {
+        console.error('Google auth error:', err);
+        res.status(500).json({ error: 'Google authentication failed' });
+    }
+});
+
 router.post('/register', validate(schemas.register), async (req, res) => {
     try {
         const { email, password, name } = req.body;

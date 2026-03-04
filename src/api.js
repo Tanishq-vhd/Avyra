@@ -43,6 +43,7 @@ export const api = {
     // Auth
     register: (email, password, name) => request('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) }),
     login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+    googleAuth: (credential) => request('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) }),
     getMe: () => request('/auth/me'),
     updatePlan: (plan) => request('/auth/plan', { method: 'PUT', body: JSON.stringify({ plan }) }),
 

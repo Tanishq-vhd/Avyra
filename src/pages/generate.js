@@ -8,7 +8,7 @@ let currentFilter = 'all';
 let currentSessionId = null;
 
 export function renderGenerate(container) {
-    container.innerHTML = `
+  container.innerHTML = `
   <div class="generate-page">
     <div class="container">
       <div class="generate-page__header slide-up">
@@ -55,7 +55,7 @@ export function renderGenerate(container) {
         </div>
         <div class="generate-form__submit">
           <button type="submit" class="btn btn--primary btn--lg" id="generate-btn" style="min-width:200px">
-            Generate Logos ✨
+            Generate Logos
           </button>
         </div>
       </form>
@@ -87,92 +87,92 @@ export function renderGenerate(container) {
   </div>
   `;
 
-    const form = container.querySelector('#generate-form');
-    const generateBtn = container.querySelector('#generate-btn');
-    const resultsSection = container.querySelector('#results-section');
-    const loadingSection = container.querySelector('#loading-section');
-    const logoGrid = container.querySelector('#logo-grid');
-    const filterContainer = container.querySelector('#filter-container');
-    const resultsCount = container.querySelector('#results-count');
-    const regenerateBtn = container.querySelector('#regenerate-btn');
+  const form = container.querySelector('#generate-form');
+  const generateBtn = container.querySelector('#generate-btn');
+  const resultsSection = container.querySelector('#results-section');
+  const loadingSection = container.querySelector('#loading-section');
+  const logoGrid = container.querySelector('#logo-grid');
+  const filterContainer = container.querySelector('#filter-container');
+  const resultsCount = container.querySelector('#results-count');
+  const regenerateBtn = container.querySelector('#regenerate-btn');
 
-    async function handleGenerate(e) {
-        if (e) e.preventDefault();
-        const brandName = container.querySelector('#brand-name').value.trim();
-        if (!brandName) {
-            showToast('Please enter a brand name', 'error');
-            return;
-        }
+  async function handleGenerate(e) {
+    if (e) e.preventDefault();
+    const brandName = container.querySelector('#brand-name').value.trim();
+    if (!brandName) {
+      showToast('Please enter a brand name', 'error');
+      return;
+    }
 
-        const description = container.querySelector('#brand-desc').value.trim();
-        const industry = container.querySelector('#brand-industry').value;
-        const tagline = container.querySelector('#brand-tagline').value.trim();
+    const description = container.querySelector('#brand-desc').value.trim();
+    const industry = container.querySelector('#brand-industry').value;
+    const tagline = container.querySelector('#brand-tagline').value.trim();
 
-        generateBtn.disabled = true;
-        generateBtn.innerHTML = '<span class="spinner"></span> Generating...';
-        resultsSection.style.display = 'none';
-        loadingSection.style.display = 'block';
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = '<span class="spinner"></span> Generating...';
+    resultsSection.style.display = 'none';
+    loadingSection.style.display = 'block';
 
-        try {
-            const result = await api.generateLogos(brandName, description, industry, tagline);
+    try {
+      const result = await api.generateLogos(brandName, description, industry, tagline);
+      currentLogos = result.logos;
+      currentSessionId = result.sessionId;
+      currentFilter = 'all';
+      renderResults();
+      showToast(`${result.logos.length} logos generated!`, 'success');
+    } catch (err) {
+      showToast(err.message || 'Generation failed', 'error');
+    } finally {
+      generateBtn.disabled = false;
+      generateBtn.innerHTML = 'Generate Logos';
+      loadingSection.style.display = 'none';
+    }
+  }
+
+  function renderResults() {
+    resultsSection.style.display = 'block';
+    const filteredLogos = currentFilter === 'all'
+      ? currentLogos
+      : currentLogos.filter(l => l.style === currentFilter);
+
+    resultsCount.textContent = filteredLogos.length;
+
+    renderFilterBar(filterContainer, currentFilter, (filter) => {
+      currentFilter = filter;
+      renderResults();
+    });
+
+    logoGrid.innerHTML = '';
+    filteredLogos.forEach(logo => {
+      const card = renderLogoCard(logo, {
+        onSelect: (l) => {
+          window.location.hash = `#/editor/${l.id}`;
+        },
+        onRemix: async (l) => {
+          try {
+            showToast('Remixing...', 'default');
+            const brandName = container.querySelector('#brand-name').value.trim();
+            const result = await api.generateLogos(
+              brandName,
+              container.querySelector('#brand-desc').value.trim(),
+              container.querySelector('#brand-industry').value,
+              container.querySelector('#brand-tagline').value.trim()
+            );
             currentLogos = result.logos;
-            currentSessionId = result.sessionId;
-            currentFilter = 'all';
             renderResults();
-            showToast(`${result.logos.length} logos generated!`, 'success');
-        } catch (err) {
-            showToast(err.message || 'Generation failed', 'error');
-        } finally {
-            generateBtn.disabled = false;
-            generateBtn.innerHTML = 'Generate Logos ✨';
-            loadingSection.style.display = 'none';
+            showToast('New variations generated!', 'success');
+          } catch (err) {
+            showToast('Remix failed', 'error');
+          }
+        },
+        onDownload: (l) => {
+          window.location.hash = `#/editor/${l.id}`;
         }
-    }
+      });
+      logoGrid.appendChild(card);
+    });
+  }
 
-    function renderResults() {
-        resultsSection.style.display = 'block';
-        const filteredLogos = currentFilter === 'all'
-            ? currentLogos
-            : currentLogos.filter(l => l.style === currentFilter);
-
-        resultsCount.textContent = filteredLogos.length;
-
-        renderFilterBar(filterContainer, currentFilter, (filter) => {
-            currentFilter = filter;
-            renderResults();
-        });
-
-        logoGrid.innerHTML = '';
-        filteredLogos.forEach(logo => {
-            const card = renderLogoCard(logo, {
-                onSelect: (l) => {
-                    window.location.hash = `#/editor/${l.id}`;
-                },
-                onRemix: async (l) => {
-                    try {
-                        showToast('Remixing...', 'default');
-                        const brandName = container.querySelector('#brand-name').value.trim();
-                        const result = await api.generateLogos(
-                            brandName,
-                            container.querySelector('#brand-desc').value.trim(),
-                            container.querySelector('#brand-industry').value,
-                            container.querySelector('#brand-tagline').value.trim()
-                        );
-                        currentLogos = result.logos;
-                        renderResults();
-                        showToast('New variations generated!', 'success');
-                    } catch (err) {
-                        showToast('Remix failed', 'error');
-                    }
-                },
-                onDownload: (l) => {
-                    window.location.hash = `#/editor/${l.id}`;
-                }
-            });
-            logoGrid.appendChild(card);
-        });
-    }
-
-    form.addEventListener('submit', handleGenerate);
-    regenerateBtn.addEventListener('click', handleGenerate);
+  form.addEventListener('submit', handleGenerate);
+  regenerateBtn.addEventListener('click', handleGenerate);
 }

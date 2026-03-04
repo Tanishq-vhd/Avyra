@@ -15,14 +15,12 @@ export function renderPaymentSuccess(container) {
 
     <div style="position:relative;z-index:2;text-align:center;max-width:520px;width:100%">
 
-      <!-- Animated checkmark -->
+      <!-- Animated logo -->
       <div class="ps__icon">
         <div class="ps__icon-ring ps__icon-ring--outer"></div>
         <div class="ps__icon-ring ps__icon-ring--inner"></div>
-        <div class="ps__icon-circle">
-          <svg class="ps__check" width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <path d="M9 16.5L14 21.5L23 11.5" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+        <div class="ps__icon-circle" style="background:white;padding:12px">
+          <img src="/logo.png" alt="Avyra" style="width:100%;height:100%;object-fit:contain" />
         </div>
       </div>
 

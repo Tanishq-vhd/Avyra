@@ -1,13 +1,13 @@
 import { auth } from '../api.js';
 
 export function renderNav(container) {
-    const update = () => {
-        const user = auth.user;
-        container.innerHTML = `
+  const update = () => {
+    const user = auth.user;
+    container.innerHTML = `
     <nav class="nav" id="main-nav">
       <div class="nav__inner">
         <a href="#/" class="nav__brand">
-          <div class="nav__brand-icon">A</div>
+          <img src="/logo.png" alt="Avyra" class="nav__brand-logo" />
           Avyra
         </a>
         <div class="nav__links">
@@ -31,36 +31,36 @@ export function renderNav(container) {
       </div>
     </nav>`;
 
-        // Scroll effect
-        const nav = container.querySelector('.nav');
-        const onScroll = () => {
-            nav.classList.toggle('nav--scrolled', window.scrollY > 10);
-        };
-        window.addEventListener('scroll', onScroll, { passive: true });
-        onScroll();
-
-        // Active link
-        const updateActiveLink = () => {
-            const hash = location.hash || '#/';
-            container.querySelectorAll('.nav__link').forEach(link => {
-                const href = link.getAttribute('href');
-                link.classList.toggle('nav__link--active', hash === href || (hash.startsWith(href) && href !== '#/'));
-            });
-        };
-        window.addEventListener('hashchange', updateActiveLink);
-        updateActiveLink();
-
-        // Events
-        const loginBtn = container.querySelector('#nav-login-btn');
-        if (loginBtn) loginBtn.addEventListener('click', () => window.dispatchEvent(new CustomEvent('show-auth')));
-
-        const logoutBtn = container.querySelector('#nav-logout-btn');
-        if (logoutBtn) logoutBtn.addEventListener('click', () => {
-            auth.logout();
-            window.location.hash = '#/';
-        });
+    // Scroll effect
+    const nav = container.querySelector('.nav');
+    const onScroll = () => {
+      nav.classList.toggle('nav--scrolled', window.scrollY > 10);
     };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
 
-    auth.onChange(update);
-    update();
+    // Active link
+    const updateActiveLink = () => {
+      const hash = location.hash || '#/';
+      container.querySelectorAll('.nav__link').forEach(link => {
+        const href = link.getAttribute('href');
+        link.classList.toggle('nav__link--active', hash === href || (hash.startsWith(href) && href !== '#/'));
+      });
+    };
+    window.addEventListener('hashchange', updateActiveLink);
+    updateActiveLink();
+
+    // Events
+    const loginBtn = container.querySelector('#nav-login-btn');
+    if (loginBtn) loginBtn.addEventListener('click', () => window.dispatchEvent(new CustomEvent('show-auth')));
+
+    const logoutBtn = container.querySelector('#nav-logout-btn');
+    if (logoutBtn) logoutBtn.addEventListener('click', () => {
+      auth.logout();
+      window.location.hash = '#/';
+    });
+  };
+
+  auth.onChange(update);
+  update();
 }
