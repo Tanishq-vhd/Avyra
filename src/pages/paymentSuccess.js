@@ -20,7 +20,7 @@ export function renderPaymentSuccess(container) {
         <div class="ps__icon-ring ps__icon-ring--outer"></div>
         <div class="ps__icon-ring ps__icon-ring--inner"></div>
         <div class="ps__icon-circle" style="background:white;padding:12px">
-          <img src="/logo.png" alt="Avyra" style="width:100%;height:100%;object-fit:contain" />
+          <img src="/logo.png" alt="Avira" style="width:100%;height:100%;object-fit:contain" />
         </div>
       </div>
 
@@ -36,7 +36,7 @@ export function renderPaymentSuccess(container) {
 
       <!-- Welcome message -->
       <p class="ps__welcome">
-        Welcome to Avyra, <strong>${firstName}</strong>.<br>
+        Welcome to Avira, <strong>${firstName}</strong>.<br>
         Your creative journey starts now.
       </p>
 

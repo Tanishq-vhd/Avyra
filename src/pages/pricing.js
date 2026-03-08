@@ -124,7 +124,7 @@ export function renderPricing(container) {
             <span class="faq__icon">+</span>
           </button>
           <div class="faq__answer">
-            <p>Avyra uses AI to generate unique, contextual logo designs based on your brand description. Each logo is procedurally created — no templates. The result is premium, diverse, and personalized.</p>
+            <p>Avira uses AI to generate unique, contextual logo designs based on your brand description. Each logo is procedurally created — no templates. The result is premium, diverse, and personalized.</p>
           </div>
         </div>
       </div>

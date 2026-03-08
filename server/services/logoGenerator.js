@@ -1,5 +1,5 @@
 // ================================================================
-// AVYRA PREMIUM LOGO ENGINE
+// AVIRA PREMIUM LOGO ENGINE
 // Generates sophisticated, multi-layered SVG logo compositions
 // ================================================================
 

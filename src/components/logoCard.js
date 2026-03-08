@@ -8,7 +8,7 @@ export function renderLogoCard(logo, { onSelect, onRemix, onDownload }) {
     card.innerHTML = `
     <div class="logo-card__preview">
       ${logo.svgData || logo.svg_data || ''}
-      <div class="watermark">AVYRA</div>
+      <div class="watermark">AVIRA</div>
     </div>
     <div class="logo-card__info">
       <span class="logo-card__style">${styleLabel}</span>

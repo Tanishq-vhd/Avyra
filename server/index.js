@@ -71,7 +71,7 @@ async function startServer() {
     }
 
     app.listen(PORT, () => {
-        console.log(`\n  ✦ Avyra Server running at http://localhost:${PORT}\n`);
+        console.log(`\n  ✦ Avira Server running at http://localhost:${PORT}\n`);
     });
 
     // Graceful shutdown

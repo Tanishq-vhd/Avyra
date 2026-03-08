@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'avyra-dev-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'avira-dev-secret-key-change-in-production';
 
 export function generateToken(userId) {
     return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });

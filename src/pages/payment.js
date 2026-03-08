@@ -8,13 +8,13 @@ export function renderPayment(container) {
   <div class="fade-in" style="max-width:460px;margin:0 auto;padding:var(--space-10) var(--space-6) var(--space-16)">
     <div style="text-align:center;margin-bottom:var(--space-6)">
       <div style="width:48px;height:48px;margin:0 auto var(--space-3)">
-        <img src="/logo.png" alt="Avyra" style="width:100%;height:100%;object-fit:contain" />
+        <img src="/logo.png" alt="Avira" style="width:100%;height:100%;object-fit:contain" />
       </div>
       <h1 style="font-size:var(--text-xl);font-weight:700;margin-bottom:var(--space-1)">
         Activate your account
       </h1>
       <p style="color:var(--color-text-secondary);font-size:var(--text-sm)">
-        One-time payment of <strong style="color:var(--color-text)">₹199</strong> to unlock Avyra
+        One-time payment of <strong style="color:var(--color-text)">₹199</strong> to unlock Avira
       </p>
     </div>
 
@@ -107,7 +107,7 @@ export function renderPayment(container) {
       await new Promise(r => setTimeout(r, 1500));
       const result = await api.activatePayment();
       auth.setUser(result.user);
-      showToast('Payment successful! Welcome to Avyra.', 'success');
+      showToast('Payment successful! Welcome to Avira.', 'success');
       window.location.hash = '#/payment-success';
     } catch (err) {
       showToast(err.message || 'Payment failed', 'error');

@@ -6,7 +6,7 @@ import { showToast } from './toast.js';
 const GOOGLE_CLIENT_ID = '489249008541-r922il9jpkh0ij29l51tkkjdmutp9a0b.apps.googleusercontent.com';
 
 // Global Google callback — must be on window for GIS
-window.__avyraGoogleCallback = null;
+window.__aviraGoogleCallback = null;
 
 export function showAuthModal(mode = 'login') {
   let currentMode = mode;
@@ -86,14 +86,14 @@ export function showAuthModal(mode = 'login') {
     }
 
     // Set global callback
-    window.__avyraGoogleCallback = handleGoogleCredential;
+    window.__aviraGoogleCallback = handleGoogleCredential;
 
     // Initialize Google Identity Services
     google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
       callback: (resp) => {
-        if (window.__avyraGoogleCallback) {
-          window.__avyraGoogleCallback(resp);
+        if (window.__aviraGoogleCallback) {
+          window.__aviraGoogleCallback(resp);
         }
       },
       auto_select: false,

@@ -1,16 +1,16 @@
-// API client for Avyra backend
+// API client for Avira backend
 
 const API_BASE = '/api';
 
 function getToken() {
-    return localStorage.getItem('avyra_token');
+    return localStorage.getItem('avira_token');
 }
 
 function getSessionId() {
-    let sid = sessionStorage.getItem('avyra_session');
+    let sid = sessionStorage.getItem('avira_session');
     if (!sid) {
         sid = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
-        sessionStorage.setItem('avyra_session', sid);
+        sessionStorage.setItem('avira_session', sid);
     }
     return sid;
 }
@@ -71,8 +71,8 @@ export const api = {
     // Utils
     getToken,
     getSessionId,
-    setToken: (token) => localStorage.setItem('avyra_token', token),
-    clearToken: () => localStorage.removeItem('avyra_token'),
+    setToken: (token) => localStorage.setItem('avira_token', token),
+    clearToken: () => localStorage.removeItem('avira_token'),
 };
 
 // Auth state

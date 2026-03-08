@@ -7,8 +7,8 @@ export function renderNav(container) {
     <nav class="nav" id="main-nav">
       <div class="nav__inner">
         <a href="#/" class="nav__brand">
-          <img src="/logo.png" alt="Avyra" class="nav__brand-logo" />
-          Avyra
+          <img src="/logo.png" alt="Avira" class="nav__brand-logo" />
+          Avira
         </a>
         <div class="nav__links">
           <a href="#/" class="nav__link" data-link="home">Home</a>
