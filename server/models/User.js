@@ -1,74 +1,95 @@
-import { getDatabase } from '../config/database.js';
-import { v4 as uuidv4 } from 'uuid';
+import mongoose from 'mongoose';
 
-const db = () => getDatabase();
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  password_hash: { type: String, required: true },
+  name: { type: String, default: '' },
+  plan: { type: String, default: 'free', enum: ['free', 'starter', 'pro'] },
+  has_paid: { type: Number, default: 0 },
+  downloads_used: { type: Number, default: 0 },
+  download_limit: { type: Number, default: 0 }
+}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
+
+const UserModel = mongoose.model('User', userSchema);
 
 export const User = {
-    create({ email, passwordHash, name }) {
-        const id = uuidv4();
-        const stmt = db().prepare(`
-      INSERT INTO users (id, email, password_hash, name)
-      VALUES (?, ?, ?, ?)
-    `);
-        stmt.run(id, email, passwordHash, name);
-        return this.findById(id);
-    },
+  async create({ email, passwordHash, name }) {
+    const doc = await UserModel.create({ email, password_hash: passwordHash, name });
+    return this.formatUser(doc);
+  },
 
-    findOrCreateGoogle({ email, name, googleId }) {
-        let user = this.findByEmail(email);
-        if (user) return user;
-        // Create new user with empty password (Google-only)
-        const id = uuidv4();
-        db().prepare(`
-      INSERT INTO users (id, email, password_hash, name)
-      VALUES (?, ?, ?, ?)
-    `).run(id, email, '__google__' + googleId, name || '');
-        return this.findById(id);
-    },
+  async findOrCreateGoogle({ email, name, googleId }) {
+    let doc = await UserModel.findOne({ email });
+    if (doc) return this.formatUser(doc);
+    doc = await UserModel.create({
+      email,
+      password_hash: '__google__' + googleId,
+      name: name || ''
+    });
+    return this.formatUser(doc);
+  },
 
-    findById(id) {
-        return db().prepare(`
-      SELECT id, email, name, plan, has_paid, downloads_used, download_limit, created_at, updated_at
-      FROM users WHERE id = ?
-    `).get(id);
-    },
+  async findById(id) {
+    const doc = await UserModel.findById(id);
+    return doc ? this.formatUser(doc) : null;
+  },
 
-    findByEmail(email) {
-        return db().prepare('SELECT * FROM users WHERE email = ?').get(email);
-    },
+  async findByEmail(email) {
+    const doc = await UserModel.findOne({ email });
+    return doc ? this.formatUserFull(doc) : null;
+  },
 
-    updatePlan(id, plan) {
-        const limits = { free: 0, starter: 3, pro: 999999 };
-        db().prepare(`
-      UPDATE users SET plan = ?, download_limit = ?, updated_at = datetime('now')
-      WHERE id = ?
-    `).run(plan, limits[plan] || 0, id);
-        return this.findById(id);
-    },
+  async updatePlan(id, plan) {
+    const limits = { free: 0, starter: 3, pro: 999999 };
+    const doc = await UserModel.findByIdAndUpdate(id, {
+      plan,
+      download_limit: limits[plan] || 0
+    }, { new: true });
+    return doc ? this.formatUser(doc) : null;
+  },
 
-    incrementDownloads(id) {
-        db().prepare(`
-      UPDATE users SET downloads_used = downloads_used + 1, updated_at = datetime('now')
-      WHERE id = ?
-    `).run(id);
-    },
+  async incrementDownloads(id) {
+    await UserModel.findByIdAndUpdate(id, { $inc: { downloads_used: 1 } });
+  },
 
-    canDownload(id) {
-        const user = this.findById(id);
-        if (!user) return false;
-        if (user.plan === 'pro') return true;
-        return user.downloads_used < user.download_limit;
-    },
+  async canDownload(id) {
+    const doc = await UserModel.findById(id);
+    if (!doc) return false;
+    if (doc.plan === 'pro') return true;
+    return doc.downloads_used < doc.download_limit;
+  },
 
-    markPaid(id) {
-        db().prepare(`
-      UPDATE users SET has_paid = 1, plan = 'starter', download_limit = 3, updated_at = datetime('now')
-      WHERE id = ?
-    `).run(id);
-        return this.findById(id);
-    },
+  async markPaid(id) {
+    const doc = await UserModel.findByIdAndUpdate(id, {
+      has_paid: 1,
+      plan: 'starter',
+      download_limit: 3
+    }, { new: true });
+    return doc ? this.formatUser(doc) : null;
+  },
 
-    count() {
-        return db().prepare('SELECT COUNT(*) as count FROM users').get().count;
-    }
+  async count() {
+    return await UserModel.countDocuments();
+  },
+
+  formatUser(doc) {
+    return {
+      id: doc._id.toString(),
+      email: doc.email,
+      name: doc.name,
+      plan: doc.plan,
+      has_paid: doc.has_paid,
+      downloads_used: doc.downloads_used,
+      download_limit: doc.download_limit,
+      created_at: doc.created_at,
+      updated_at: doc.updated_at
+    };
+  },
+
+  formatUserFull(doc) {
+    return {
+      ...this.formatUser(doc),
+      password_hash: doc.password_hash
+    };
+  }
 };

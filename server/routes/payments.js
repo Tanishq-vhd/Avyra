@@ -14,16 +14,14 @@ router.get('/plans', (req, res) => {
 });
 
 // Simulate payment and upgrade plan
-router.post('/checkout', requireAuth, (req, res) => {
+router.post('/checkout', requireAuth, async (req, res) => {
     try {
         const { plan } = req.body;
         if (!PLANS[plan]) {
             return res.status(400).json({ error: 'Invalid plan' });
         }
 
-        // In production: integrate Razorpay/Stripe here
-        // For now, simulate successful payment
-        const user = User.updatePlan(req.user.id, plan);
+        const user = await User.updatePlan(req.user.id, plan);
 
         res.json({
             success: true,

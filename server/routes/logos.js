@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 const router = Router();
 
 // Generate logos - works for both authenticated and anonymous users
-router.post('/generate', generateRateLimit(), validate(schemas.generateLogo), (req, res) => {
+router.post('/generate', generateRateLimit(), validate(schemas.generateLogo), async (req, res) => {
     try {
         const { brandName, description, industry, tagline } = req.body;
         const sessionId = req.headers['x-session-id'] || uuidv4();
@@ -33,7 +33,7 @@ router.post('/generate', generateRateLimit(), validate(schemas.generateLogo), (r
             config: logo.config
         }));
 
-        const saved = Logo.createBatch(logoRecords);
+        const saved = await Logo.createBatch(logoRecords);
 
         res.json({
             sessionId,
@@ -54,16 +54,16 @@ router.post('/generate', generateRateLimit(), validate(schemas.generateLogo), (r
 });
 
 // Get logos by session (for anonymous users)
-router.get('/session/:sessionId', (req, res) => {
+router.get('/session/:sessionId', async (req, res) => {
     try {
         const { sessionId } = req.params;
         const { style, limit = 50, offset = 0 } = req.query;
-        const logos = Logo.findBySession(sessionId, {
+        const logos = await Logo.findBySession(sessionId, {
             style,
             limit: Math.min(parseInt(limit) || 50, 100),
             offset: parseInt(offset) || 0
         });
-        const total = Logo.countBySession(sessionId);
+        const total = await Logo.countBySession(sessionId);
         res.json({ logos, total, limit: parseInt(limit), offset: parseInt(offset) });
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch logos' });
@@ -71,15 +71,15 @@ router.get('/session/:sessionId', (req, res) => {
 });
 
 // Get user's logos (authenticated)
-router.get('/my', requireAuth, (req, res) => {
+router.get('/my', requireAuth, async (req, res) => {
     try {
         const { style, limit = 50, offset = 0 } = req.query;
-        const logos = Logo.findByUser(req.user.id, {
+        const logos = await Logo.findByUser(req.user.id, {
             style,
             limit: Math.min(parseInt(limit) || 50, 100),
             offset: parseInt(offset) || 0
         });
-        const total = Logo.countByUser(req.user.id);
+        const total = await Logo.countByUser(req.user.id);
         res.json({ logos, total });
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch logos' });
@@ -87,9 +87,9 @@ router.get('/my', requireAuth, (req, res) => {
 });
 
 // Get single logo
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
     try {
-        const logo = Logo.findById(req.params.id);
+        const logo = await Logo.findById(req.params.id);
         if (!logo) return res.status(404).json({ error: 'Logo not found' });
         res.json({ logo });
     } catch (err) {
@@ -98,11 +98,11 @@ router.get('/:id', (req, res) => {
 });
 
 // Update logo config (edit)
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
     try {
         const { config } = req.body;
         if (!config) return res.status(400).json({ error: 'Config required' });
-        const logo = Logo.updateConfig(req.params.id, config);
+        const logo = await Logo.updateConfig(req.params.id, config);
         if (!logo) return res.status(404).json({ error: 'Logo not found' });
         res.json({ logo });
     } catch (err) {
@@ -111,9 +111,9 @@ router.put('/:id', (req, res) => {
 });
 
 // Toggle favorite
-router.post('/:id/favorite', (req, res) => {
+router.post('/:id/favorite', async (req, res) => {
     try {
-        const logo = Logo.toggleFavorite(req.params.id);
+        const logo = await Logo.toggleFavorite(req.params.id);
         if (!logo) return res.status(404).json({ error: 'Logo not found' });
         res.json({ logo });
     } catch (err) {
@@ -122,36 +122,38 @@ router.post('/:id/favorite', (req, res) => {
 });
 
 // Download logo
-router.post('/:id/download', (req, res) => {
+router.post('/:id/download', async (req, res) => {
     try {
         const { format = 'png' } = req.body;
-        const logo = Logo.findById(req.params.id);
+        const logo = await Logo.findById(req.params.id);
         if (!logo) return res.status(404).json({ error: 'Logo not found' });
 
         const userId = req.user?.id || null;
 
         // Check download limits for authenticated users
         if (userId) {
-            if (!User.canDownload(userId)) {
+            const canDl = await User.canDownload(userId);
+            if (!canDl) {
                 return res.status(403).json({
                     error: 'Download limit reached',
                     upgrade: true,
                     message: 'Upgrade your plan to download more logos'
                 });
             }
-            User.incrementDownloads(userId);
+            await User.incrementDownloads(userId);
         }
 
         // Record download
-        Download.create({ userId, logoId: logo.id, format });
+        await Download.create({ userId, logoId: logo.id, format });
 
         // Return the SVG data (client handles rendering to PNG/etc)
+        const userDoc = userId ? await User.findById(userId) : null;
         res.json({
             success: true,
             svgData: logo.svg_data,
             config: logo.config,
             format,
-            watermark: !userId || User.findById(userId)?.plan === 'free'
+            watermark: !userId || userDoc?.plan === 'free'
         });
     } catch (err) {
         console.error('Download error:', err);
@@ -160,9 +162,9 @@ router.post('/:id/download', (req, res) => {
 });
 
 // Delete logo
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
     try {
-        Logo.delete(req.params.id);
+        await Logo.delete(req.params.id);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Failed to delete logo' });

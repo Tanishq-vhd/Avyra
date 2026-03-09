@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
-import { getDatabase, closeDatabase } from './config/database.js';
+import { connectDatabase, closeDatabase } from './config/database.js';
 import { authMiddleware } from './middleware/auth.js';
 import { rateLimit } from './middleware/rateLimit.js';
 import authRoutes from './routes/auth.js';
@@ -16,15 +16,8 @@ const PORT = process.env.PORT || 3000;
 const IS_PROD = process.env.NODE_ENV === 'production';
 
 async function startServer() {
-    // Ensure data directory exists
-    const dataDir = path.join(__dirname, 'data');
-    if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-    }
-
-    // Initialize database
-    getDatabase();
-    console.log('✓ Database initialized');
+    // Connect to MongoDB
+    await connectDatabase();
 
     const app = express();
 

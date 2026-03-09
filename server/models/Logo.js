@@ -1,90 +1,113 @@
-import { getDatabase } from '../config/database.js';
-import { v4 as uuidv4 } from 'uuid';
+import mongoose from 'mongoose';
 
-const db = () => getDatabase();
+const logoSchema = new mongoose.Schema({
+  user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  session_id: { type: String, index: true },
+  brand_name: { type: String, required: true, index: true },
+  description: { type: String, default: '' },
+  industry: { type: String, default: '' },
+  tagline: { type: String, default: '' },
+  style: { type: String, required: true, index: true },
+  svg_data: { type: String, required: true },
+  config: { type: mongoose.Schema.Types.Mixed, default: {} },
+  is_favorite: { type: Number, default: 0 }
+}, { timestamps: { createdAt: 'created_at', updatedAt: false } });
+
+const LogoModel = mongoose.model('Logo', logoSchema);
+
+function formatLogo(doc) {
+  return {
+    id: doc._id.toString(),
+    user_id: doc.user_id?.toString() || null,
+    session_id: doc.session_id,
+    brand_name: doc.brand_name,
+    description: doc.description,
+    industry: doc.industry,
+    tagline: doc.tagline,
+    style: doc.style,
+    svg_data: doc.svg_data,
+    config: doc.config,
+    is_favorite: doc.is_favorite,
+    created_at: doc.created_at
+  };
+}
 
 export const Logo = {
-    create({ userId, sessionId, brandName, description, industry, tagline, style, svgData, config }) {
-        const id = uuidv4();
-        const stmt = db().prepare(`
-      INSERT INTO logos (id, user_id, session_id, brand_name, description, industry, tagline, style, svg_data, config)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-        stmt.run(id, userId || null, sessionId, brandName, description || '', industry || '', tagline || '', style, svgData, JSON.stringify(config || {}));
-        return this.findById(id);
-    },
+  async create({ userId, sessionId, brandName, description, industry, tagline, style, svgData, config }) {
+    const doc = await LogoModel.create({
+      user_id: userId || null,
+      session_id: sessionId,
+      brand_name: brandName,
+      description: description || '',
+      industry: industry || '',
+      tagline: tagline || '',
+      style,
+      svg_data: svgData,
+      config: config || {}
+    });
+    return formatLogo(doc);
+  },
 
-    createBatch(logos) {
-        const stmt = db().prepare(`
-      INSERT INTO logos (id, user_id, session_id, brand_name, description, industry, tagline, style, svg_data, config)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-        const insertMany = db().transaction((items) => {
-            const results = [];
-            for (const l of items) {
-                const id = uuidv4();
-                stmt.run(id, l.userId || null, l.sessionId, l.brandName, l.description || '', l.industry || '', l.tagline || '', l.style, l.svgData, JSON.stringify(l.config || {}));
-                results.push(id);
-            }
-            return results;
-        });
-        const ids = insertMany(logos);
-        return ids.map(id => this.findById(id));
-    },
+  async createBatch(logos) {
+    const docs = await LogoModel.insertMany(logos.map(l => ({
+      user_id: l.userId || null,
+      session_id: l.sessionId,
+      brand_name: l.brandName,
+      description: l.description || '',
+      industry: l.industry || '',
+      tagline: l.tagline || '',
+      style: l.style,
+      svg_data: l.svgData,
+      config: l.config || {}
+    })));
+    return docs.map(formatLogo);
+  },
 
-    findById(id) {
-        const row = db().prepare('SELECT * FROM logos WHERE id = ?').get(id);
-        if (row) row.config = JSON.parse(row.config);
-        return row;
-    },
-
-    findByUser(userId, { limit = 50, offset = 0, style } = {}) {
-        let query = 'SELECT * FROM logos WHERE user_id = ?';
-        const params = [userId];
-        if (style) {
-            query += ' AND style = ?';
-            params.push(style);
-        }
-        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-        params.push(limit, offset);
-        const rows = db().prepare(query).all(...params);
-        rows.forEach(r => r.config = JSON.parse(r.config));
-        return rows;
-    },
-
-    findBySession(sessionId, { limit = 50, offset = 0, style } = {}) {
-        let query = 'SELECT * FROM logos WHERE session_id = ?';
-        const params = [sessionId];
-        if (style) {
-            query += ' AND style = ?';
-            params.push(style);
-        }
-        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-        params.push(limit, offset);
-        const rows = db().prepare(query).all(...params);
-        rows.forEach(r => r.config = JSON.parse(r.config));
-        return rows;
-    },
-
-    updateConfig(id, config) {
-        db().prepare('UPDATE logos SET config = ? WHERE id = ?').run(JSON.stringify(config), id);
-        return this.findById(id);
-    },
-
-    toggleFavorite(id) {
-        db().prepare('UPDATE logos SET is_favorite = CASE WHEN is_favorite = 1 THEN 0 ELSE 1 END WHERE id = ?').run(id);
-        return this.findById(id);
-    },
-
-    delete(id) {
-        db().prepare('DELETE FROM logos WHERE id = ?').run(id);
-    },
-
-    countByUser(userId) {
-        return db().prepare('SELECT COUNT(*) as count FROM logos WHERE user_id = ?').get(userId).count;
-    },
-
-    countBySession(sessionId) {
-        return db().prepare('SELECT COUNT(*) as count FROM logos WHERE session_id = ?').get(sessionId).count;
+  async findById(id) {
+    try {
+      const doc = await LogoModel.findById(id);
+      return doc ? formatLogo(doc) : null;
+    } catch {
+      return null;
     }
+  },
+
+  async findByUser(userId, { limit = 50, offset = 0, style } = {}) {
+    const query = { user_id: userId };
+    if (style) query.style = style;
+    const docs = await LogoModel.find(query).sort({ created_at: -1 }).skip(offset).limit(limit);
+    return docs.map(formatLogo);
+  },
+
+  async findBySession(sessionId, { limit = 50, offset = 0, style } = {}) {
+    const query = { session_id: sessionId };
+    if (style) query.style = style;
+    const docs = await LogoModel.find(query).sort({ created_at: -1 }).skip(offset).limit(limit);
+    return docs.map(formatLogo);
+  },
+
+  async updateConfig(id, config) {
+    const doc = await LogoModel.findByIdAndUpdate(id, { config }, { new: true });
+    return doc ? formatLogo(doc) : null;
+  },
+
+  async toggleFavorite(id) {
+    const doc = await LogoModel.findById(id);
+    if (!doc) return null;
+    doc.is_favorite = doc.is_favorite === 1 ? 0 : 1;
+    await doc.save();
+    return formatLogo(doc);
+  },
+
+  async delete(id) {
+    await LogoModel.findByIdAndDelete(id);
+  },
+
+  async countByUser(userId) {
+    return await LogoModel.countDocuments({ user_id: userId });
+  },
+
+  async countBySession(sessionId) {
+    return await LogoModel.countDocuments({ session_id: sessionId });
+  }
 };

@@ -1,41 +1,69 @@
-import { getDatabase } from '../config/database.js';
-import { v4 as uuidv4 } from 'uuid';
+import mongoose from 'mongoose';
 
-const db = () => getDatabase();
+const downloadSchema = new mongoose.Schema({
+  user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+  logo_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Logo', required: true, index: true },
+  format: { type: String, required: true },
+  file_path: { type: String, default: '' },
+  file_size: { type: Number, default: 0 }
+}, { timestamps: { createdAt: 'created_at', updatedAt: false } });
+
+const DownloadModel = mongoose.model('Download', downloadSchema);
 
 export const Download = {
-    create({ userId, logoId, format, filePath, fileSize }) {
-        const id = uuidv4();
-        db().prepare(`
-      INSERT INTO downloads (id, user_id, logo_id, format, file_path, file_size)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(id, userId || null, logoId, format, filePath || '', fileSize || 0);
-        return this.findById(id);
-    },
+  async create({ userId, logoId, format, filePath, fileSize }) {
+    const doc = await DownloadModel.create({
+      user_id: userId || null,
+      logo_id: logoId,
+      format,
+      file_path: filePath || '',
+      file_size: fileSize || 0
+    });
+    return {
+      id: doc._id.toString(),
+      user_id: doc.user_id?.toString() || null,
+      logo_id: doc.logo_id.toString(),
+      format: doc.format,
+      file_path: doc.file_path,
+      file_size: doc.file_size,
+      created_at: doc.created_at
+    };
+  },
 
-    findById(id) {
-        return db().prepare('SELECT * FROM downloads WHERE id = ?').get(id);
-    },
+  async findById(id) {
+    const doc = await DownloadModel.findById(id);
+    return doc || null;
+  },
 
-    findByUser(userId, { limit = 50, offset = 0 } = {}) {
-        return db().prepare(`
-      SELECT d.*, l.brand_name, l.style, l.svg_data 
-      FROM downloads d
-      JOIN logos l ON d.logo_id = l.id
-      WHERE d.user_id = ?
-      ORDER BY d.created_at DESC
-      LIMIT ? OFFSET ?
-    `).all(userId, limit, offset);
-    },
+  async findByUser(userId, { limit = 50, offset = 0 } = {}) {
+    const docs = await DownloadModel.find({ user_id: userId })
+      .sort({ created_at: -1 })
+      .skip(offset)
+      .limit(limit)
+      .populate('logo_id', 'brand_name style svg_data');
 
-    countByUser(userId) {
-        return db().prepare('SELECT COUNT(*) as count FROM downloads WHERE user_id = ?').get(userId).count;
-    },
+    return docs.map(d => ({
+      id: d._id.toString(),
+      user_id: d.user_id?.toString() || null,
+      logo_id: d.logo_id?._id?.toString() || d.logo_id?.toString(),
+      format: d.format,
+      created_at: d.created_at,
+      brand_name: d.logo_id?.brand_name,
+      style: d.logo_id?.style,
+      svg_data: d.logo_id?.svg_data
+    }));
+  },
 
-    countToday(userId) {
-        return db().prepare(`
-      SELECT COUNT(*) as count FROM downloads 
-      WHERE user_id = ? AND created_at >= date('now')
-    `).get(userId).count;
-    }
+  async countByUser(userId) {
+    return await DownloadModel.countDocuments({ user_id: userId });
+  },
+
+  async countToday(userId) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return await DownloadModel.countDocuments({
+      user_id: userId,
+      created_at: { $gte: today }
+    });
+  }
 };
