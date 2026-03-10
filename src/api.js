@@ -65,7 +65,9 @@ export const api = {
 
     // Payments
     getPlans: () => request('/payments/plans'),
-    checkout: (plan) => request('/payments/checkout', { method: 'POST', body: JSON.stringify({ plan }) }),
+    getRazorpayKey: () => request('/payments/key'),
+    createOrder: (plan) => request('/payments/create-order', { method: 'POST', body: JSON.stringify({ plan }) }),
+    verifyPayment: (data) => request('/payments/verify', { method: 'POST', body: JSON.stringify(data) }),
     activatePayment: () => request('/auth/activate-payment', { method: 'POST' }),
 
     // Utils
