@@ -7,13 +7,26 @@ export function renderNav(container) {
     <nav class="nav" id="main-nav">
       <div class="nav__inner">
         <a href="#/" class="nav__brand">
-          <img src="/logo.png" alt="Avira" class="nav__brand-logo" />
-          Avira
+          <svg class="nav__brand-icon" width="34" height="34" viewBox="0 0 34 34" fill="none">
+            <defs>
+              <linearGradient id="logo-grad" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#8b5cf6"/>
+                <stop offset="50%" stop-color="#ec4899"/>
+                <stop offset="100%" stop-color="#f97316"/>
+              </linearGradient>
+            </defs>
+            <rect width="34" height="34" rx="10" fill="url(#logo-grad)"/>
+            <path d="M11 23L17 10L23 23H20L17 16L14 23H11Z" fill="white" opacity="0.95"/>
+            <circle cx="17" cy="11" r="2" fill="white" opacity="0.6"/>
+          </svg>
+          <span class="nav__brand-text">Avira AI</span>
         </a>
         <div class="nav__links">
           <a href="#/" class="nav__link" data-link="home">Home</a>
-          <a href="#/generate" class="nav__link" data-link="generate">Generate</a>
+          <a href="#/generate" class="nav__link" data-link="generate">Features</a>
           <a href="#/pricing" class="nav__link" data-link="pricing">Pricing</a>
+          <a href="#/" class="nav__link" data-link="gallery">Gallery</a>
+          <a href="#/" class="nav__link" data-link="contact">Contact</a>
         </div>
         <div class="nav__actions">
           ${user ? `
@@ -28,6 +41,13 @@ export function renderNav(container) {
             <a href="#/generate" class="btn btn--primary btn--sm">Get Started</a>
           `}
         </div>
+        <button class="nav__mobile-toggle" id="nav-mobile-toggle" aria-label="Toggle menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
       </div>
     </nav>`;
 
